@@ -66,7 +66,8 @@ RUN mkdir -p storage/framework/{sessions,views,cache} \
 # Script de inicio simplificado
 COPY <<'EOF' /start.sh
 #!/bin/bash
-set -e
+
+echo "=== Iniciando aplicación Laravel en Railway ==="
 
 # Crear archivo .env si no existe (Railway usa variables de entorno)
 if [ ! -f /var/www/html/.env ]; then
@@ -123,21 +124,47 @@ REDIS_HOST="${REDIS_HOST:-127.0.0.1}"
 REDIS_PASSWORD="${REDIS_PASSWORD}"
 REDIS_PORT="${REDIS_PORT:-6379}"
 ENVFILE
+    echo "Archivo .env creado"
+else
+    echo "Archivo .env ya existe"
 fi
 
-# Ejecutar migraciones
-php artisan migrate --force
+# Verificar variables críticas
+if [ -z "$APP_KEY" ]; then
+    echo "ERROR: APP_KEY no está configurada"
+    exit 1
+fi
 
-# Limpiar y cachear configuración
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+echo "Variables de entorno cargadas correctamente"
+
+# Ejecutar migraciones con manejo de errores
+echo "Ejecutando migraciones..."
+if php artisan migrate --force 2>&1; then
+    echo "Migraciones completadas exitosamente"
+else
+    echo "WARNING: Las migraciones fallaron, pero continuando..."
+fi
+
+# Limpiar caché antiguo
+echo "Limpiando caché..."
+php artisan cache:clear 2>&1 || true
+php artisan config:clear 2>&1 || true
+php artisan route:clear 2>&1 || true
+php artisan view:clear 2>&1 || true
+
+# Cachear configuración solo si no falla
+echo "Cacheando configuración..."
+php artisan config:cache 2>&1 || echo "WARNING: config:cache falló"
+php artisan route:cache 2>&1 || echo "WARNING: route:cache falló"
+php artisan view:cache 2>&1 || echo "WARNING: view:cache falló"
 
 # Crear enlace simbólico de storage
-php artisan storage:link || true
+echo "Creando enlace simbólico de storage..."
+php artisan storage:link 2>&1 || echo "Storage link ya existe o falló"
 
+echo "=== Iniciando servidor PHP en puerto ${PORT:-8000} ==="
 # Iniciar servidor PHP integrado
-php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
+exec php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
 EOF
 
 RUN chmod +x /start.sh
