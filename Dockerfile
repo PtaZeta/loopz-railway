@@ -89,9 +89,11 @@ server {
     error_page 404 /index.php;
 
     location ~ \.php$ {
-        fastcgi_pass unix:/var/run/php-fpm.sock;
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_index index.php;
         fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
         include fastcgi_params;
+        fastcgi_param PATH_INFO $fastcgi_path_info;
     }
 
     location ~ /\.(?!well-known).* {
@@ -100,11 +102,9 @@ server {
 }
 EOF
 
-# Configurar PHP-FPM para usar socket
-RUN sed -i 's/listen = 127.0.0.1:9000/listen = \/var\/run\/php-fpm.sock/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.owner = www-data/listen.owner = www-data/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.group = www-data/listen.group = www-data/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;listen.mode = 0660/listen.mode = 0660/' /usr/local/etc/php-fpm.d/www.conf
+# Configurar PHP-FPM para usar TCP
+RUN sed -i 's/listen = 127.0.0.1:9000/listen = 9000/' /usr/local/etc/php-fpm.d/www.conf \
+    && sed -i 's/;clear_env = no/clear_env = no/' /usr/local/etc/php-fpm.d/www.conf
 
 # Configurar Supervisor
 COPY <<'EOF' /etc/supervisor/conf.d/supervisord.conf
