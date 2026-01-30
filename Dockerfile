@@ -1,5 +1,5 @@
 # Dockerfile optimizado para Railway
-FROM php:8.3-cli
+FROM php:8.4-cli
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
