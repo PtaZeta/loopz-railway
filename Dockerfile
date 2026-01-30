@@ -33,21 +33,14 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Configurar directorio de trabajo
 WORKDIR /var/www/html
 
-# Copiar archivos de dependencias primero (para aprovechar caché de Docker)
-COPY composer.json composer.lock ./
-COPY package.json package-lock.json ./
+# Copiar todo el código primero (más simple y confiable)
+COPY . .
 
 # Instalar dependencias de PHP (sin dev)
-RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
+RUN composer install --no-dev --optimize-autoloader --no-interaction --prefer-dist
 
 # Instalar dependencias de Node.js (con dev para el build)
 RUN npm ci
-
-# Copiar el resto del código
-COPY . .
-
-# Completar instalación de Composer y optimizar autoload
-RUN composer dump-autoload --optimize --no-dev
 
 # Build de assets con Vite
 RUN npm run build
