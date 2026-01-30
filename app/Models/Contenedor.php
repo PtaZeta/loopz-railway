@@ -65,11 +65,14 @@ class Contenedor extends Model
     {
         $array = $this->toArray();
 
-        $this->loadMissing('usuarios');
-        $array['usuario_names'] = $this->usuarios->pluck('name')->toArray();
+        // Solo agregar campos virtuales si NO estamos usando el driver database
+        if (config('scout.driver') !== 'database') {
+            $this->loadMissing('usuarios');
+            $array['usuario_names'] = $this->usuarios->pluck('name')->toArray();
 
-        $this->loadMissing('canciones');
-        $array['cancion_titles'] = $this->canciones->pluck('titulo')->toArray();
+            $this->loadMissing('canciones');
+            $array['cancion_titles'] = $this->canciones->pluck('titulo')->toArray();
+        }
 
         return $array;
     }

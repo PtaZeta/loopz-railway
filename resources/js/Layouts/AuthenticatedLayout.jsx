@@ -497,14 +497,14 @@ export default function AuthenticatedLayout({ children, header }) {
                                             Administración
                                         </Dropdown.Link>
                                     ) : null}
-                                    <Dropdown.Link href={route('canciones.create')} method="get" className="flex items-center">
+                                    <div className="flex items-center opacity-50 cursor-not-allowed px-3 py-2 text-sm text-gray-400" title="Funcionalidad deshabilitada">
                                         <MusicalNoteIcon className="h-4 w-4 mr-2" />
                                         Subir canción
-                                    </Dropdown.Link>
-                                    <Dropdown.Link href={route('lanzamiento.crear')} method="get" className="flex items-center">
+                                    </div>
+                                    <div className="flex items-center opacity-50 cursor-not-allowed px-3 py-2 text-sm text-gray-400" title="Funcionalidad deshabilitada">
                                         <ArrowUpOnSquareIcon className="h-4 w-4 mr-2" />
                                         Subir lanzamiento
-                                    </Dropdown.Link>
+                                    </div>
                                     <Dropdown.Link href={route('logout')} method="post" as="button" className="flex items-center">
                                         <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
                                         Cerrar sesión
@@ -631,14 +631,14 @@ export default function AuthenticatedLayout({ children, header }) {
                         {usuario && (
                             <div className="space-y-1 px-2 pb-3 border-b border-gray-700/50 mb-3">
                                 <h5 className="text-xs uppercase text-gray-500 font-semibold px-2 mb-1">Tus Contenidos</h5>
-                                <Link href={route('canciones.create')} method="get" className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700/50 flex items-center space-x-2">
+                                <div className="block px-3 py-2 rounded-md text-base font-medium text-gray-400 opacity-50 cursor-not-allowed flex items-center space-x-2" title="Funcionalidad deshabilitada">
                                     <MusicalNoteIcon className="h-5 w-5" />
                                     <span>Subir canción</span>
-                                </Link>
-                                <Link href={route('lanzamiento.crear')} method="get" className="block px-3 py-2 rounded-md text-base font-medium text-gray-300 hover:text-white hover:bg-gray-700/50 flex items-center space-x-2">
+                                </div>
+                                <div className="block px-3 py-2 rounded-md text-base font-medium text-gray-400 opacity-50 cursor-not-allowed flex items-center space-x-2" title="Funcionalidad deshabilitada">
                                     <ArrowUpOnSquareIcon className="h-5 w-5" />
                                     <span>Subir lanzamiento</span>
-                                </Link>
+                                </div>
                             </div>
                         )}
 

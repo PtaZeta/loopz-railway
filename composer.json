@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.2",
         "aerni/laravel-spotify": "^3.0",
+        "algolia/algoliasearch-client-php": "^4.37",
         "guzzlehttp/guzzle": "^7.9",
         "inertiajs/inertia-laravel": "^2.0",
         "james-heinrich/getid3": "^1.9",
@@ -18,6 +19,7 @@
         "laravel/tinker": "^2.9",
         "league/flysystem-aws-s3-v3": "^3.0",
         "meilisearch/meilisearch-php": "^1.14",
+        "meilisearch/search-bundle": "^0.15.9",
         "spatie/laravel-sluggable": "^3.7",
         "tightenco/ziggy": "^2.0"
     },

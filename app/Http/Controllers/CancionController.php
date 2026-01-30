@@ -89,12 +89,13 @@ class CancionController extends Controller
                 }
 
                 try {
-                    $path = Storage::disk('s3')
+                    $disk = config('filesystems.default');
+                    $path = Storage::disk($disk)
                         ->putFileAs('canciones', $archivoAudio, $nombre, 'public');
                     if (! $path) {
                         throw new \Exception('putFileAs devolvió false');
                     }
-                    $cancion->archivo_url = Storage::disk('s3')->url($path);
+                    $cancion->archivo_url = Storage::disk($disk)->url($path);
                 } catch (\Exception $e) {
                     return redirect()->back();
                 }
@@ -109,10 +110,11 @@ class CancionController extends Controller
                 $extFoto = $archivoFoto->getClientOriginalExtension();
                 $nombreFoto = Str::uuid() . "_foto.{$extFoto}";
                 try {
-                    $pathFoto = Storage::disk('s3')
+                    $disk = config('filesystems.default');
+                    $pathFoto = Storage::disk($disk)
                         ->putFileAs('imagenes', $archivoFoto, $nombreFoto, 'public');
                     $cancion->foto_url = $pathFoto
-                        ? Storage::disk('s3')->url($pathFoto)
+                        ? Storage::disk($disk)->url($pathFoto)
                         : null;
                 } catch (\Exception $e) {
                     $cancion->foto_url = null;
@@ -262,9 +264,10 @@ class CancionController extends Controller
 
         if ($request->hasFile('archivo')) {
             $nuevoArchivoAudio = $request->file('archivo');
+            $disk = config('filesystems.default');
             $rutaAnterior = $this->getRelativePath($cancion->archivo_url);
-            if ($rutaAnterior && Storage::disk('s3')->exists($rutaAnterior)) {
-                Storage::disk('s3')->delete($rutaAnterior);
+            if ($rutaAnterior && Storage::disk($disk)->exists($rutaAnterior)) {
+                Storage::disk($disk)->delete($rutaAnterior);
             }
             $nombre = Str::uuid() . '_song.' . $nuevoArchivoAudio->getClientOriginalExtension();
             $getID3 = new getID3;
@@ -274,30 +277,32 @@ class CancionController extends Controller
             } catch (\Exception $e) {
                 $cancion->duracion = $cancion->duracion ?? 0;
             }
-            $path = Storage::disk('s3')->putFileAs('canciones', $nuevoArchivoAudio, $nombre, ['visibility' => 'public']);
+            $path = Storage::disk($disk)->putFileAs('canciones', $nuevoArchivoAudio, $nombre, ['visibility' => 'public']);
             if (!$path) {
                 return back();
             }
-            $cancion->archivo_url = Storage::disk('s3')->url($path);
+            $cancion->archivo_url = Storage::disk($disk)->url($path);
         }
 
         $eliminarFoto = $request->boolean('eliminar_foto');
         if ($request->hasFile('foto')) {
             $nuevaFoto = $request->file('foto');
+            $disk = config('filesystems.default');
             $rutaAnterior = $this->getRelativePath($cancion->foto_url);
-            if ($rutaAnterior && Storage::disk('s3')->exists($rutaAnterior)) {
-                Storage::disk('s3')->delete($rutaAnterior);
+            if ($rutaAnterior && Storage::disk($disk)->exists($rutaAnterior)) {
+                Storage::disk($disk)->delete($rutaAnterior);
             }
             $nombre = Str::uuid() . '_pic.' . $nuevaFoto->getClientOriginalExtension();
-            $path = Storage::disk('s3')->putFileAs('imagenes', $nuevaFoto, $nombre, ['visibility' => 'public']);
+            $path = Storage::disk($disk)->putFileAs('imagenes', $nuevaFoto, $nombre, ['visibility' => 'public']);
             if (!$path) {
                 return back();
             }
-            $cancion->foto_url = Storage::disk('s3')->url($path);
+            $cancion->foto_url = Storage::disk($disk)->url($path);
         } elseif ($eliminarFoto) {
+            $disk = config('filesystems.default');
             $ruta = $this->getRelativePath($cancion->foto_url);
-            if ($ruta && Storage::disk('s3')->exists($ruta)) {
-                Storage::disk('s3')->delete($ruta);
+            if ($ruta && Storage::disk($disk)->exists($ruta)) {
+                Storage::disk($disk)->delete($ruta);
             }
             $cancion->foto_url = null;
         }
@@ -351,13 +356,13 @@ class CancionController extends Controller
         }
 
         $rutaAudio = $this->getRelativePath($cancion->archivo_url);
-        if ($rutaAudio && Storage::disk('s3')->exists($rutaAudio)) {
-            Storage::disk('s3')->delete($rutaAudio);
+        if ($rutaAudio && Storage::disk(config('filesystems.default'))->exists($rutaAudio)) {
+            Storage::disk(config('filesystems.default'))->delete($rutaAudio);
         }
 
         $rutaFoto = $this->getRelativePath($cancion->foto_url);
-        if ($rutaFoto && Storage::disk('s3')->exists($rutaFoto)) {
-            Storage::disk('s3')->delete($rutaFoto);
+        if ($rutaFoto && Storage::disk(config('filesystems.default'))->exists($rutaFoto)) {
+            Storage::disk(config('filesystems.default'))->delete($rutaFoto);
         }
 
         $cancion->delete();

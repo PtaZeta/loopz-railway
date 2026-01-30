@@ -116,8 +116,8 @@ class ContenedorController extends Controller
         $imagenUrl = null;
         if ($request->hasFile('imagen') && $request->file('imagen')->isValid()) {
             $archivoImagen = $request->file('imagen');
-            $imagenUrl = Storage::disk('s3')->url(
-                Storage::disk('s3')->putFileAs(
+            $imagenUrl = Storage::disk(config('filesystems.default'))->url(
+                Storage::disk(config('filesystems.default'))->putFileAs(
                     'contenedor_imagenes',
                     $archivoImagen,
                     Str::uuid() . "_img.{$archivoImagen->getClientOriginalExtension()}",
@@ -187,8 +187,8 @@ class ContenedorController extends Controller
         if ($peticion->hasFile($campoImagen) && $peticion->file($campoImagen)->isValid()) {
             $archivoImagen = $peticion->file($campoImagen);
 
-            $datosValidados[$campoImagen] = Storage::disk('s3')->url(
-                Storage::disk('s3')->putFileAs(
+            $datosValidados[$campoImagen] = Storage::disk(config('filesystems.default'))->url(
+                Storage::disk(config('filesystems.default'))->putFileAs(
                     'contenedor_imagenes',
                     $archivoImagen,
                     Str::uuid() . "_img.{$archivoImagen->getClientOriginalExtension()}",
@@ -231,7 +231,7 @@ class ContenedorController extends Controller
         $contenedor = Contenedor::findOrFail($id);
 
         if ($contenedor->imagen && !filter_var($contenedor->imagen, FILTER_VALIDATE_URL)) {
-            $contenedor->imagen = Storage::disk('s3')->url($contenedor->imagen);
+            $contenedor->imagen = Storage::disk(config('filesystems.default'))->url($contenedor->imagen);
         }
 
         $this->validarTipoContenedor($contenedor, $tipoEsperado);
@@ -272,7 +272,7 @@ class ContenedorController extends Controller
 
             $userPlaylists->each(function ($playlist) {
                 if ($playlist->imagen && !filter_var($playlist->imagen, FILTER_VALIDATE_URL)) {
-                    $playlist->imagen = Storage::disk('s3')->url($playlist->imagen);
+                    $playlist->imagen = Storage::disk(config('filesystems.default'))->url($playlist->imagen);
                 }
             });
         } else {
@@ -367,26 +367,26 @@ class ContenedorController extends Controller
 
         if ($peticion->hasFile($campoImagenRequest) && $peticion->file($campoImagenRequest)->isValid()) {
             if ($rutaImagenAntigua) {
-                if (Storage::disk('s3')->exists($rutaImagenAntigua)) {
-                    Storage::disk('s3')->delete($rutaImagenAntigua);
+                if (Storage::disk(config('filesystems.default'))->exists($rutaImagenAntigua)) {
+                    Storage::disk(config('filesystems.default'))->delete($rutaImagenAntigua);
                 }
             }
 
             $nuevoArchivoImagen = $peticion->file($campoImagenRequest);
             $nombreArchivo = Str::uuid() . "_img." . $nuevoArchivoImagen->getClientOriginalExtension();
-            $pathGuardadoS3 = Storage::disk('s3')->putFileAs(
+            $pathGuardadoS3 = Storage::disk(config('filesystems.default'))->putFileAs(
                 $directorioS3,
                 $nuevoArchivoImagen,
                 $nombreArchivo,
-                'public-read'
+                'public'
             );
 
-            $urlCompleta = Storage::disk('s3')->url($pathGuardadoS3);
+            $urlCompleta = Storage::disk(config('filesystems.default'))->url($pathGuardadoS3);
             $datosValidados[$campoImagenModelo] = $urlCompleta;
         } elseif ($peticion->boolean('eliminar_imagen')) {
             if ($rutaImagenAntigua) {
-                if (Storage::disk('s3')->exists($rutaImagenAntigua)) {
-                    Storage::disk('s3')->delete($rutaImagenAntigua);
+                if (Storage::disk(config('filesystems.default'))->exists($rutaImagenAntigua)) {
+                    Storage::disk(config('filesystems.default'))->delete($rutaImagenAntigua);
                 }
             }
             $datosValidados[$campoImagenModelo] = null;

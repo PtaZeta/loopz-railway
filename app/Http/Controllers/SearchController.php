@@ -360,7 +360,7 @@ class SearchController extends Controller
                 ->get()
                 ->map(function ($playlist) {
                     if ($playlist->imagen && !Str::startsWith($playlist->imagen, 'http')) {
-                        $playlist->imagen = \Storage::disk('s3')->url($playlist->imagen);
+                        $playlist->imagen = \Storage::disk(config('filesystems.default'))->url($playlist->imagen);
                     }
                     return $playlist;
                 })

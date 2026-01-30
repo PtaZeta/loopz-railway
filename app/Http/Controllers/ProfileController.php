@@ -96,7 +96,7 @@ class ProfileController extends Controller
 
             $userPlaylists->each(function ($playlist) {
                 if ($playlist->imagen && !filter_var($playlist->imagen, FILTER_VALIDATE_URL)) {
-                    $playlist->imagen = Storage::disk('s3')->url($playlist->imagen);
+                    $playlist->imagen = Storage::disk(config('filesystems.default'))->url($playlist->imagen);
                 }
             });
         } else {
@@ -155,16 +155,21 @@ class ProfileController extends Controller
             $nombreBucket = config('filesystems.disks.s3.bucket');
             $claveS3Antigua = $usuario->foto_perfil ? obtenerClaveS3DesdeUrl($usuario->foto_perfil, $nombreBucket) : null;
 
-            if ($claveS3Antigua && Storage::disk('s3')->exists($claveS3Antigua)) {
-                Storage::disk('s3')->delete($claveS3Antigua);
+            if ($claveS3Antigua && Storage::disk(config('filesystems.default'))->exists($claveS3Antigua)) {
+                Storage::disk(config('filesystems.default'))->delete($claveS3Antigua);
             }
 
             $archivoFoto = $request->file('foto_perfil');
             $nombreFoto = Str::uuid() . '_perfil.' . $archivoFoto->getClientOriginalExtension();
-            $rutaFoto = Storage::disk('s3')->putFileAs('perfiles/fotos', $archivoFoto, $nombreFoto, 'public-read');
+            $rutaFoto = Storage::disk(config('filesystems.default'))->putFileAs('perfiles/fotos', $archivoFoto, $nombreFoto, 'public');
 
             if ($rutaFoto) {
-                $usuario->foto_perfil = Storage::disk('s3')->url($rutaFoto);
+                // Guardar solo la ruta relativa, el frontend construirá la URL completa
+                if (config('filesystems.default') === 'public') {
+                    $usuario->foto_perfil = '/storage/' . $rutaFoto;
+                } else {
+                    $usuario->foto_perfil = Storage::disk(config('filesystems.default'))->url($rutaFoto);
+                }
             } else {
                 return redirect()->back();
             }
@@ -174,16 +179,21 @@ class ProfileController extends Controller
             $nombreBucket = config('filesystems.disks.s3.bucket');
             $claveS3Antigua = $usuario->banner_perfil ? obtenerClaveS3DesdeUrl($usuario->banner_perfil, $nombreBucket) : null;
 
-            if ($claveS3Antigua && Storage::disk('s3')->exists($claveS3Antigua)) {
-                Storage::disk('s3')->delete($claveS3Antigua);
+            if ($claveS3Antigua && Storage::disk(config('filesystems.default'))->exists($claveS3Antigua)) {
+                Storage::disk(config('filesystems.default'))->delete($claveS3Antigua);
             }
 
             $archivoBanner = $request->file('banner_perfil');
             $nombreBanner = Str::uuid() . '_banner.' . $archivoBanner->getClientOriginalExtension();
-            $rutaBanner = Storage::disk('s3')->putFileAs('perfiles/banners', $archivoBanner, $nombreBanner, 'public-read');
+            $rutaBanner = Storage::disk(config('filesystems.default'))->putFileAs('perfiles/banners', $archivoBanner, $nombreBanner, 'public');
 
             if ($rutaBanner) {
-                $usuario->banner_perfil = Storage::disk('s3')->url($rutaBanner);
+                // Guardar solo la ruta relativa, el frontend construirá la URL completa
+                if (config('filesystems.default') === 'public') {
+                    $usuario->banner_perfil = '/storage/' . $rutaBanner;
+                } else {
+                    $usuario->banner_perfil = Storage::disk(config('filesystems.default'))->url($rutaBanner);
+                }
             } else {
                 return redirect()->back();
             }
@@ -215,12 +225,12 @@ class ProfileController extends Controller
         Auth::logout();
         $usuario->delete();
 
-        if ($claveFotoPerfil && Storage::disk('s3')->exists($claveFotoPerfil)) {
-            Storage::disk('s3')->delete($claveFotoPerfil);
+        if ($claveFotoPerfil && Storage::disk(config('filesystems.default'))->exists($claveFotoPerfil)) {
+            Storage::disk(config('filesystems.default'))->delete($claveFotoPerfil);
         }
 
-        if ($claveBanner && Storage::disk('s3')->exists($claveBanner)) {
-            Storage::disk('s3')->delete($claveBanner);
+        if ($claveBanner && Storage::disk(config('filesystems.default'))->exists($claveBanner)) {
+            Storage::disk(config('filesystems.default'))->delete($claveBanner);
         }
 
         $request->session()->invalidate();
