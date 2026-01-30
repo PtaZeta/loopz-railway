@@ -42,8 +42,8 @@ COPY package.json package-lock.json ./
 # Instalar dependencias de PHP (sin dev)
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
-# Instalar dependencias de Node.js
-RUN npm ci --only=production
+# Instalar dependencias de Node.js (con dev para el build)
+RUN npm ci
 
 # Copiar el resto del código
 COPY . .
@@ -53,6 +53,9 @@ RUN composer dump-autoload --optimize --no-dev
 
 # Build de assets con Vite
 RUN npm run build
+
+# Limpiar node_modules para ahorrar espacio (ya no se necesitan después del build)
+RUN rm -rf node_modules
 
 # Crear directorios necesarios y establecer permisos
 RUN mkdir -p storage/framework/{sessions,views,cache} \
