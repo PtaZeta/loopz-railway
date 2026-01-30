@@ -138,12 +138,18 @@ else
     echo "WARNING: Las migraciones fallaron, pero continuando..."
 fi
 
-# Ejecutar seeders
-echo "Ejecutando seeders..."
-if php artisan db:seed --force 2>&1; then
-    echo "Seeders completados exitosamente"
+# Ejecutar seeders solo si la tabla generos está vacía
+echo "Verificando si necesitamos ejecutar seeders..."
+GENEROS_COUNT=$(php artisan tinker --execute="echo \App\Models\Genero::count();" 2>/dev/null || echo "0")
+if [ "$GENEROS_COUNT" = "0" ]; then
+    echo "Base de datos vacía, ejecutando seeders..."
+    if php artisan db:seed --force 2>&1; then
+        echo "Seeders completados exitosamente"
+    else
+        echo "WARNING: Los seeders fallaron, pero continuando..."
+    fi
 else
-    echo "WARNING: Los seeders fallaron, pero continuando..."
+    echo "La base de datos ya tiene datos, saltando seeders"
 fi
 
 # Limpiar caché antiguo
