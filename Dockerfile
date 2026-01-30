@@ -1,5 +1,5 @@
 # Dockerfile optimizado para Railway
-FROM php:8.3-fpm
+FROM php:8.3-cli
 
 # Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
@@ -11,8 +11,6 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     zip \
     unzip \
-    nginx \
-    supervisor \
     && rm -rf /var/lib/apt/lists/*
 
 # Instalar extensiones de PHP
@@ -59,83 +57,13 @@ RUN rm -rf node_modules
 
 # Crear directorios necesarios y establecer permisos
 RUN mkdir -p storage/framework/{sessions,views,cache} \
+# Crear directorios necesarios y establecer permisos
+RUN mkdir -p storage/framework/{sessions,views,cache} \
     && mkdir -p storage/logs \
     && mkdir -p bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache
+    && chmod -R 775 storage bootstrap/cache
 
-# Configurar Nginx
-COPY <<'EOF' /etc/nginx/sites-available/default
-server {
-    listen $PORT default_server;
-    listen [::]:$PORT default_server;
-    server_name _;
-    root /var/www/html/public;
-
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
-
-    index index.php;
-
-    charset utf-8;
-
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-
-    location = /favicon.ico { access_log off; log_not_found off; }
-    location = /robots.txt  { access_log off; log_not_found off; }
-
-    error_page 404 /index.php;
-
-    location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
-        fastcgi_index index.php;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-        fastcgi_param PATH_INFO $fastcgi_path_info;
-    }
-
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
-}
-EOF
-
-# Configurar PHP-FPM para usar TCP
-RUN sed -i 's/listen = 127.0.0.1:9000/listen = 9000/' /usr/local/etc/php-fpm.d/www.conf \
-    && sed -i 's/;clear_env = no/clear_env = no/' /usr/local/etc/php-fpm.d/www.conf
-
-# Configurar Supervisor
-COPY <<'EOF' /etc/supervisor/conf.d/supervisord.conf
-[supervisord]
-nodaemon=true
-user=root
-logfile=/var/log/supervisor/supervisord.log
-pidfile=/var/run/supervisord.pid
-
-[program:php-fpm]
-command=/usr/local/sbin/php-fpm --nodaemonize
-autostart=true
-autorestart=true
-priority=5
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-
-[program:nginx]
-command=/usr/sbin/nginx -g "daemon off;"
-autostart=true
-autorestart=true
-priority=10
-stdout_logfile=/dev/stdout
-stdout_logfile_maxbytes=0
-stderr_logfile=/dev/stderr
-stderr_logfile_maxbytes=0
-EOF
-
-# Script de inicio
+# Script de inicio simplificado
 COPY <<'EOF' /start.sh
 #!/bin/bash
 set -e
@@ -197,9 +125,6 @@ REDIS_PORT="${REDIS_PORT:-6379}"
 ENVFILE
 fi
 
-# Reemplazar $PORT en la configuración de Nginx
-sed -i "s/\$PORT/${PORT:-8000}/g" /etc/nginx/sites-available/default
-
 # Ejecutar migraciones
 php artisan migrate --force
 
@@ -211,8 +136,8 @@ php artisan view:cache
 # Crear enlace simbólico de storage
 php artisan storage:link || true
 
-# Iniciar servicios con supervisor
-exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
+# Iniciar servidor PHP integrado
+php artisan serve --host=0.0.0.0 --port=${PORT:-8000}
 EOF
 
 RUN chmod +x /start.sh
