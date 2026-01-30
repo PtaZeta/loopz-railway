@@ -138,6 +138,14 @@ else
     echo "WARNING: Las migraciones fallaron, pero continuando..."
 fi
 
+# Ejecutar seeders
+echo "Ejecutando seeders..."
+if php artisan db:seed --force 2>&1; then
+    echo "Seeders completados exitosamente"
+else
+    echo "WARNING: Los seeders fallaron, pero continuando..."
+fi
+
 # Limpiar caché antiguo
 echo "Limpiando caché..."
 php artisan cache:clear 2>&1 || true
