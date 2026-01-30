@@ -140,13 +140,23 @@ fi
 
 # Ejecutar seeders basado en configuración
 if [ "$RUN_SEEDERS" = "true" ]; then
-    echo "RUN_SEEDERS=true detectado, ejecutando seeders..."
-    if php artisan db:seed --force 2>&1; then
-        echo "Seeders completados exitosamente"
+    echo "======================================"
+    echo "RUN_SEEDERS=true detectado"
+    echo "EJECUTANDO SEEDERS CON FRESH..."
+    echo "======================================"
+    
+    # Usar migrate:fresh con seed en lugar de solo seed
+    if php artisan migrate:fresh --seed --force 2>&1; then
+        echo "======================================"
+        echo "SEEDERS COMPLETADOS EXITOSAMENTE"
+        echo "======================================"
     else
-        echo "WARNING: Los seeders fallaron, pero continuando..."
+        echo "======================================"
+        echo "ERROR: Los seeders fallaron"
+        echo "======================================"
     fi
 else
+    echo "RUN_SEEDERS no está configurado o es false"
     echo "Verificando si necesitamos ejecutar seeders..."
     GENEROS_COUNT=$(php artisan tinker --execute="echo \App\Models\Genero::count();" 2>/dev/null || echo "0")
     if [ "$GENEROS_COUNT" = "0" ]; then
@@ -157,7 +167,7 @@ else
             echo "WARNING: Los seeders fallaron, pero continuando..."
         fi
     else
-        echo "La base de datos ya tiene datos, saltando seeders"
+        echo "La base de datos ya tiene datos ($GENEROS_COUNT géneros encontrados)"
     fi
 fi
 
